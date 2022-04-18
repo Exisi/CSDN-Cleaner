@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CSDN-Cleaner|下载页面移除|百度搜索csdn结果优化
 // @namespace    http://tampermonkey.net/
-// @version      2.2
+// @version      2.3
 // @description  1.进入CSDN下载界面自动关闭 2.CSDN博客文章界面下推荐中有关csdn下载的链接清除 3.百度搜索界面清除CSDN下载和聚合内容的搜索结果 4.百度界面搜索结果/相同文章去重 5.对 CSDN 文章原创 / 转载突出标识 6.增加界面表格获取按钮，对csdn博客中的表格进行获取重绘，复制格式不混乱 7.防百度预加载干扰
 // @author       Exisi
 // @match        https://download.csdn.net/*
@@ -53,35 +53,40 @@
         //禁止预加载
         setDiabledPreload();
         let textList = [];
-        //清除重复结果
+        //清除结果
         let nodeList = document.getElementsByClassName("result c-container new-pmd");
         if (nodeList != null) {
             //获取搜索模式
             let model = getSearchModel();
+            //清除重复结果
             if (model > 0) {
                 sameBlogRemove(nodeList, textList);
             }
+            //根据关键字去除 CSDN下载的搜索结果
+            removeCsdnDownloadByKeyword(model, nodeList);
         }
     }
 
     /**
      * ------------------------------------------------------------------------------------------------------------*
-     * 百度搜索，根据关键字去除 CSDN下载结果
+     * 百度搜索，根据关键字去除 CSDN下载的搜索结果
      * @param nodeList: 搜素结果节点列表
      * ------------------------------------------------------------------------------------------------------------*
      */
-    function removeCsdnDownloadByKeyword(nodeList) {
+    function removeCsdnDownloadByKeyword(model, nodeList) {
         for (let i in nodeList) {
-            const t = nodeList[i].textContent;
+            let t = nodeList[i].textContent;
             //暴力检索
-            let full_exist = t.search(/(CSDN下载是一个提供学习资源)|(请访问CSDN下载)|(csdn已为您找到关于)/g) > 0;
-            let part_exist = t.search(/(C币\s+立即)|(立即下载\s+低至)|(次\s+身份认)|(积分\/\C币)/g) > 0;
-            if (t != null && full_exist && part_exist) {
-                //清除baidu搜索界面的所有csdn下载链接
-                nodeList[i].style.display = "none";
+            if (t != null) {
+                let full_exist = t.search(/(CSDN下载是一个提供学习资源)|(请访问CSDN下载)|(csdn已为您找到关于)/g) > 0;
+                let part_exist = t.search(/(C币\s+立即)|(立即下载\s+低至)|(次\s+身份认)|(积分\/\C币)/g) > 0;
+                if (t != null && (full_exist || part_exist)) {
+                    //清除baidu搜索界面的所有csdn下载链接
+                    nodeList[i].style.display = "none";
+                }
+                let text = getNodeText(model, nodeList[i]);
+                if (text != null) textList.push(text);
             }
-            let text = getNodeText(model, nodeList[i]);
-            if (text != null) textList.push(text);
         }
     }
 
