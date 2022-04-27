@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CSDN-Cleaner|下载页面移除|百度搜索csdn结果优化
 // @namespace    http://tampermonkey.net/
-// @version      2.3
+// @version      2.4
 // @description  1.进入CSDN下载界面自动关闭 2.CSDN博客文章界面下推荐中有关csdn下载的链接清除 3.百度搜索界面清除CSDN下载和聚合内容的搜索结果 4.百度界面搜索结果/相同文章去重 5.对 CSDN 文章原创 / 转载突出标识 6.增加界面表格获取按钮，对csdn博客中的表格进行获取重绘，复制格式不混乱 7.防百度预加载干扰
 // @author       Exisi
 // @match        https://download.csdn.net/*
@@ -63,7 +63,7 @@
                 sameBlogRemove(nodeList, textList);
             }
             //根据关键字去除 CSDN下载的搜索结果
-            removeCsdnDownloadByKeyword(model, nodeList);
+            removeCsdnDownloadByKeyword(model, nodeList, textList);
         }
     }
 
@@ -73,7 +73,7 @@
      * @param nodeList: 搜素结果节点列表
      * ------------------------------------------------------------------------------------------------------------*
      */
-    function removeCsdnDownloadByKeyword(model, nodeList) {
+    function removeCsdnDownloadByKeyword(model, nodeList, textList) {
         for (let i in nodeList) {
             let t = nodeList[i].textContent;
             //暴力检索
@@ -96,20 +96,31 @@
      * ------------------------------------------------------------------------------------------------------------*
      */
     function setDiabledPreload() {
-        let page_btn = document.getElementsByClassName("page-inner_2jZi2")[0].getElementsByTagName("a");
-        if (page_btn != null) {
-            for (let i in page_btn) {
-                if (page_btn[i] != null) {
-                    page_btn[i].onclick = function () {
-                        setTimeout("location.reload()", 100);
+        let page_content = document.getElementsByClassName("page-inner_2jZi2")[0];
+        if (page_content != null) {
+            let page_btn = page_content.getElementsByTagName("a");
+            if (page_btn != null) {
+                for (let i in page_btn) {
+                    if (page_btn[i] != null) {
+                        page_btn[i].onclick = function () {
+                            let page_link = page_btn[i].href;
+                            if (page_link != null) {
+                                window.location = page_link;
+                            }
+                        }
                     }
                 }
             }
-        }
-        let submit_btn = document.getElementsByClassName("bg s_btn_wr")[0];
-        if (submit_btn != null) {
-            submit_btn.onclick = function () {
-                setTimeout("location.reload()", 500);
+            let submit_btn = document.getElementsByClassName("bg s_btn_wr")[0];
+            if (submit_btn != null) {
+                submit_btn.onclick = function () {
+                    let keyword = document.getElementById("kw");
+                    if (keyword != null) {
+                        keyword = keyword.value;
+                        let prefix = "https://www.baidu.com/s?wd=";
+                        window.location = prefix + keyword;
+                    }
+                }
             }
         }
     }
@@ -295,17 +306,17 @@
         if (tagNode != null && tag != null && preTag != null) {
             tag.style.display = "none";
             let newTag = document.createElement("div");
-            newTag.innerHTML += "<div id='taga_content' \
-                                    style='background:white;height:35px;width:35px;border-radius:5px;\
-                                        border:1px solid " + color + ";transform: rotate(-45deg);display:flex;\
-                                        justify-content:center;align-items:center;margin-right:20px;\
-                                        margin-left:-25px;'>\
-                                    <button id='new_tag' \
-                                        style='background:none;\
-                                            color:" + color + ";transform:rotate(45deg);text-align: center;\
-                                            display: inline-block;font-size:12px;padding:2px;'>" + type + "\
-                                    </button>\
-                                </div>";
+            newTag.innerHTML += "<div id='taga_content' " +
+                "style='background:white;height:35px;width:35px;border-radius:5px;" +
+                "border:1px solid " + color + ";transform: rotate(-45deg);display:flex;" +
+                "justify-content:center;align-items:center;margin-right:20px;" +
+                "margin-left:-25px;'>" +
+                "<button id='new_tag' " +
+                "style='background:none;" +
+                "color:" + color + ";transform:rotate(45deg);text-align: center;" +
+                "display: inline-block;font-size:12px;padding:2px;'>" + type + "" +
+                "</button>" +
+                "</div>";
             preTag.prepend(newTag);
             let nextTagContent = document.getElementsByClassName("tags-box artic-tag-box")[0];
             if (nextTagContent != null) nextTagContent.style.paddingTop = "6px";
