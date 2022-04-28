@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         CSDN-Cleaner|下载页面移除|百度搜索csdn结果优化
 // @namespace    http://tampermonkey.net/
-// @version      2.4
-// @description  1.进入CSDN下载界面自动关闭 2.CSDN博客文章界面下推荐中有关csdn下载的链接清除 3.百度搜索界面清除CSDN下载和聚合内容的搜索结果 4.百度界面搜索结果/相同文章去重 5.对 CSDN 文章原创 / 转载突出标识 6.增加界面表格获取按钮，对csdn博客中的表格进行获取重绘，复制格式不混乱 7.防百度预加载干扰
+// @version      2.5
+// @description  1.进入CSDN下载界面自动关闭 2.CSDN博客文章界面下推荐中有关csdn下载的链接清除 3.百度搜索界面清除CSDN下载和聚合内容的搜索结果 4.百度界面搜索结果/相同文章去重 5.对 CSDN 文章原创 / 转载、发布时间突出标识 6.增加界面表格获取按钮，对csdn博客中的表格进行获取重绘，复制格式不混乱 7.防百度预加载干扰
 // @author       Exisi
 // @match        https://download.csdn.net/*
 // @match        http://download.csdn.net/*
@@ -15,9 +15,9 @@
 (function () {
     let url = window.location.href;
     let match = {
-        download: url.match(/download.csdn/),
-        blog: url.match(/blog.csdn/),
-        baidu: url.match(/baidu.com/)
+        download : url.match(/download.csdn/),
+        blog     : url.match(/blog.csdn/),
+        baidu    : url.match(/baidu.com/)
     };
 
     if (match["download"]) {
@@ -26,22 +26,32 @@
     }
 
     if (match["blog"]) {
+        let blog = {
+            copyright: document.getElementsByClassName("article-copyright")[0] ? 1 : 0,
+            time_content: document.getElementsByClassName("bar-content")[0],
+            table_node: document.getElementsByClassName("table-box"),
+            item_list: document.getElementsByClassName("recommend-item-box type_download clearfix"),
+        }
         //重新标识原创和转载标签
-        let copyright = document.getElementsByClassName("article-copyright")[0] ? 1 : 0;
-        if (copyright == 1) {
+        if (blog.copyright == 1) {
             createNewTag("原创", "red");
         } else {
             createNewTag("转载", "green");
         }
+        //突出显示
+        if (blog.time_content != null) {
+            let time_node = blog.time_content.getElementsByClassName("time")[0];
+            if (time_node != null) {
+                getPostTimeDiff(time_node);
+            }
+        }
         //重绘表格
-        let table_node = document.getElementsByClassName("table-box");
-        if (table_node[0] != null) {
-            reRormatTable(table_node)
+        if (blog.table_node[0] != null) {
+            reRormatTable(blog.table_node)
         }
         //移除推荐文章中的下载
-        let itemList = document.getElementsByClassName("recommend-item-box type_download clearfix");
-        if (itemList != null) {
-            articleDownloadRemove(itemList);
+        if (blog.item_list != null) {
+            articleDownloadRemove(blog.item_list);
         }
         //防csdn下载js再次加入
         window.onload = function () {
@@ -52,40 +62,40 @@
     if (match["baidu"]) {
         //禁止预加载
         setDiabledPreload();
-        let textList = [];
+        let text_list = [];
         //清除结果
-        let nodeList = document.getElementsByClassName("result c-container new-pmd");
-        if (nodeList != null) {
+        let node_list = document.getElementsByClassName("result c-container new-pmd");
+        if (node_list != null) {
             //获取搜索模式
             let model = getSearchModel();
             //清除重复结果
             if (model > 0) {
-                sameBlogRemove(nodeList, textList);
+                sameBlogRemove(node_list, text_list);
             }
             //根据关键字去除 CSDN下载的搜索结果
-            removeCsdnDownloadByKeyword(model, nodeList, textList);
+            removeCsdnDownloadByKeyword(model, node_list, text_list);
         }
     }
 
     /**
      * ------------------------------------------------------------------------------------------------------------*
      * 百度搜索，根据关键字去除 CSDN下载的搜索结果
-     * @param nodeList: 搜素结果节点列表
+     * @param node_list: 搜素结果节点列表
      * ------------------------------------------------------------------------------------------------------------*
      */
-    function removeCsdnDownloadByKeyword(model, nodeList, textList) {
-        for (let i in nodeList) {
-            let t = nodeList[i].textContent;
+    function removeCsdnDownloadByKeyword(model, node_list, text_list) {
+        for (let i in node_list) {
+            let t = node_list[i].textContent;
             //暴力检索
             if (t != null) {
                 let full_exist = t.search(/(CSDN下载是一个提供学习资源)|(请访问CSDN下载)|(csdn已为您找到关于)/g) > 0;
                 let part_exist = t.search(/(C币\s+立即)|(立即下载\s+低至)|(次\s+身份认)|(积分\/\C币)/g) > 0;
                 if (t != null && (full_exist || part_exist)) {
                     //清除baidu搜索界面的所有csdn下载链接
-                    nodeList[i].style.display = "none";
+                    node_list[i].style.display = "none";
                 }
-                let text = getNodeText(model, nodeList[i]);
-                if (text != null) textList.push(text);
+                let text = getNodeText(model, node_list[i]);
+                if (text != null) text_list.push(text);
             }
         }
     }
@@ -157,9 +167,9 @@
      */
     function getNodeText(model, node) {
         if (model > 0 && node.nodeType == 1) {
-            let itemNode = node.getElementsByClassName("c-abstract")[0];
-            if (itemNode != null) {
-                let text = itemNode.textContent;
+            let item_node = node.getElementsByClassName("c-abstract")[0];
+            if (item_node != null) {
+                let text = item_node.textContent;
                 //去除csdn文章前的日期描述
                 let t = text.slice(text.indexOf("日") + 1).replaceAll(" ", "").replaceAll(".", "");
                 return t;
@@ -171,19 +181,19 @@
     /**
      * ------------------------------------------------------------------------------------------------------------*
      * 百度搜索，找出可能重复的结果项
-     * @param nodeList 搜素结果节点列表
-     * @param textList 搜素结果文本列表
+     * @param node_list 搜素结果节点列表
+     * @param text_list 搜素结果文本列表
      * ------------------------------------------------------------------------------------------------------------*
      */
-    function sameBlogRemove(nodeList, textList) {
-        for (let i in textList) {
-            for (let j in textList) {
-                if (i != j && compare(textList[i], textList[j])) {
-                    let key = nodeList[i].textContent.search(/CSDN技术社区/g) > 0 ? i : j; //优先干掉csdn（￣へ￣）
+    function sameBlogRemove(node_list, text_list) {
+        for (let i in text_list) {
+            for (let j in text_list) {
+                if (i != j && compare(text_list[i], text_list[j])) {
+                    let key = node_list[i].textContent.search(/CSDN技术社区/g) > 0 ? i : j; //优先干掉csdn（￣へ￣）
                     // console.log("csdn?:key:===>"+key+"item:"+i);
                     //清空移除的搜索结果
-                    textList[key] = "";
-                    nodeList[key].style.display = "none";
+                    text_list[key] = "";
+                    node_list[key].style.display = "none";
                     continue;
                 }
             }
@@ -300,28 +310,32 @@
      * ------------------------------------------------------------------------------------------------------------*
      */
     function createNewTag(type, color) {
-        let tagNode = document.getElementsByClassName("article-bar-top")[0];
-        let tag = tagNode.getElementsByClassName("article-type-img")[0];
-        let preTag = document.getElementsByClassName("blog-tags-box")[0];
-        if (tagNode != null && tag != null && preTag != null) {
-            tag.style.display = "none";
-            let newTag = document.createElement("div");
-            newTag.innerHTML += "<div id='taga_content' " +
-                "style='background:white;height:35px;width:35px;border-radius:5px;" +
-                "border:1px solid " + color + ";transform: rotate(-45deg);display:flex;" +
-                "justify-content:center;align-items:center;margin-right:20px;" +
-                "margin-left:-25px;'>" +
-                "<button id='new_tag' " +
-                "style='background:none;" +
-                "color:" + color + ";transform:rotate(45deg);text-align: center;" +
-                "display: inline-block;font-size:12px;padding:2px;'>" + type + "" +
-                "</button>" +
-                "</div>";
-            preTag.prepend(newTag);
-            let nextTagContent = document.getElementsByClassName("tags-box artic-tag-box")[0];
-            if (nextTagContent != null) nextTagContent.style.paddingTop = "6px";
-            let btn_tag = document.getElementById("new_tag");
-            btn_tag.addEventListener("click", function () {
+        let tag = {
+            node  : document.getElementsByClassName("article-bar-top")[0],
+            tag   : document.getElementsByClassName("article-type-img")[0],
+            parent: document.getElementsByClassName("blog-tags-box")[0],
+        }
+        let new_tag = {
+            tag: document.createElement("div"),
+            next: document.getElementsByClassName("tags-box artic-tag-box")[0],
+        }
+        if (tag.node != null && tag.tag != null && tag.parent != null) {
+            tag.tag.style.display = "none";
+            new_tag.tag.innerHTML += "<div id='taga_content' " +
+                                        "style='background:white;height:35px;width:35px;border-radius:5px;" +
+                                            "border:1px solid " + color + ";transform: rotate(-45deg);display:flex;" +
+                                            "justify-content:center;align-items:center;margin-right:20px;" +
+                                            "margin-left:-25px;'>" +
+                                        "<button id='new_tag' " +
+                                            "style='background:none;" +
+                                                "color:" + color + ";transform:rotate(45deg);text-align: center;" +
+                                                "display: inline-block;font-size:12px;padding:2px;'>" + type + "" +
+                                            "</button>" +
+                                        "</div>";
+            tag.parent.prepend(new_tag.tag);
+            if (new_tag.next != null) new_tag.next.style.paddingTop = "6px";
+            let btn = document.getElementById("new_tag");
+            btn.addEventListener("click", function () {
                 let link = document.createElement("a");
                 link.setAttribute("href", "#pcCommentBox");
                 link.click();
@@ -331,8 +345,70 @@
 
     /**
      * ------------------------------------------------------------------------------------------------------------*
+     * CSDN 文章发布时间，获取并计算时间差
+     * @param time_node: 发布时间原节点
+     * ------------------------------------------------------------------------------------------------------------*
+     */
+    function getPostTimeDiff(time_node) {
+        let time = time_node.textContent;
+        time = time.replace("于", "").replace("发布", "").split(" ")[0].trim();
+        let date = {
+            post    : new Date(time),
+            current : new Date(),
+            color   : "green",
+        }
+        let diff = new Date(date.current - date.post).getFullYear() - 1970;
+        let level = {
+            early    : diff <= 1 ? 1 : 0,
+            late     : 1 < diff && diff <= 3 ? 1 : 0,
+            out_time : diff > 3 ? 1 : 0,
+        }
+        if (level.early){
+            date.color = 'green';
+        }
+        if (level.late){
+            date.color = 'blue';
+        }
+        if (level.out_time){
+            date.color = 'red';
+        }
+        markPostTime(date.color, time);
+        if(level.out_time){
+            document.getElementById("post_date_text").style.textDecoration = "line-through";
+        }
+        let post_img = document.getElementsByClassName("article-time-img article-heard-img")[0];
+        if (post_img != null){
+            post_img.style.display = "none";
+            time_node.style.display = "none";
+        }
+    }
+
+    /**
+     * ------------------------------------------------------------------------------------------------------------*
+     * CSDN 文章发布时间，突出标识
+     * @param color: 文字和边框颜色（1年以内-绿色，3年内-蓝色，3年以上-红色）
+     * @param time: 发布时间
+     * ------------------------------------------------------------------------------------------------------------*
+     */
+    function markPostTime(color, time){
+        let article_content = document.getElementsByClassName("blog-content-box")[0];
+        if (article_content != null) {
+            let new_node = document.createElement("div");
+            new_node.innerHTML += "<p id='post_date_text'"+
+                                        "style='float:right;margin-right:-15px;color:" + color +
+                                            ";margin-top:10px;border-radius:30px;border-width:1px;"+
+                                            "border-style:solid;border-color:"+ color +
+                                            ";padding-left:5px;padding-right:5px;'>" 
+                                        + time +
+                                  "</p>";
+            article_content.prepend(new_node);
+        }
+    }
+
+    /**
+     * ------------------------------------------------------------------------------------------------------------*
      * CSDN 文章推荐，下载移除
-     * @param itemList: 文章推荐父节点
+     * @param item_list: 文章推荐父节点
      * ------------------------------------------------------------------------------------------------------------*
      */
     function articleDownloadRemove(itemList) {
