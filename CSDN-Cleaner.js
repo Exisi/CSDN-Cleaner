@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CSDN-Cleaner|下载页面移除|百度搜索csdn结果优化
 // @namespace    http://tampermonkey.net/
-// @version      2.6
+// @version      2.7
 // @description  1.进入CSDN下载界面自动关闭 2.CSDN博客文章界面下推荐中有关csdn下载的链接清除 3.百度搜索界面清除CSDN下载和聚合内容的搜索结果 4.百度界面搜索结果/相同文章去重 5.对 CSDN 文章原创 / 转载、发布时间突出标识 6.增加界面表格获取按钮，对csdn博客中的表格进行获取重绘，复制格式不混乱 7.防百度预加载干扰
 // @author       Exisi
 // @match        https://download.csdn.net/*
@@ -10,9 +10,11 @@
 // @match        *.blog.csdn.net/article/*
 // @match        *://www.baidu.com/s*
 // @supportURL   https://github.com/Exisi/CSDN-Cleaner/issues/new
+// @downloadURL none
 // ==/UserScript==
 
 (function () {
+    "use strict";
     let url = window.location.href;
     let match = {
         download : url.match(/download.csdn/),
@@ -111,27 +113,41 @@
             let page_btn = page_content.getElementsByTagName("a");
             if (page_btn != null) {
                 for (let i in page_btn) {
-                    if (page_btn[i] != null) {
-                        page_btn[i].onclick = function () {
-                            let page_link = page_btn[i].href;
-                            if (page_link != null) {
-                                window.location = page_link;
-                            }
-                        }
+                    if (page_btn[i].nodeType == 1) {
+                        page_btn[i].addEventListener("click",setPageLink.bind(this,page_btn[i]));
                     }
                 }
             }
             let submit_btn = document.getElementsByClassName("bg s_btn_wr")[0];
-            if (submit_btn != null) {
-                submit_btn.onclick = function () {
-                    let keyword = document.getElementById("kw");
-                    if (keyword != null) {
-                        keyword = keyword.value;
-                        let prefix = "https://www.baidu.com/s?wd=";
-                        window.location = prefix + keyword;
-                    }
-                }
+            if (submit_btn.nodeType == 1) {
+                submit_btn.addEventListener("click",setSearchKeyword);
             }
+        }
+    }
+
+    /**
+     * ------------------------------------------------------------------------------------------------------------*
+     * 百度搜索，翻页链接
+     * ------------------------------------------------------------------------------------------------------------*
+     */
+     function setPageLink(btn) {
+        let page_link = btn.href;
+        if (page_link != null) {
+            window.location = page_link;
+        }
+    }
+
+    /**
+     * ------------------------------------------------------------------------------------------------------------*
+     * 百度搜索，搜素关键词
+     * ------------------------------------------------------------------------------------------------------------*
+     */
+    function setSearchKeyword() {
+        let keyword = document.getElementById("kw");
+        if (keyword != null) {
+            keyword = keyword.value;
+            let prefix = "https://www.baidu.com/s?wd=";
+            window.location = prefix + keyword;
         }
     }
 
