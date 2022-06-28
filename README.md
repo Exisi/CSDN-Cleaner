@@ -99,6 +99,6 @@
 2. CSDN文章界面推荐栏的下载链接清除
 
 ## 安装
-#### 从 **[GreasyFork](https://greasyfork.org/zh-CN/scripts/427841-csdn-cleaner-%E4%B8%8B%E8%BD%BD%E9%A1%B5%E9%9D%A2%E7%A7%BB%E9%99%A4-%E7%99%BE%E5%BA%A6%E6%90%9C%E7%B4%A2csdn%E7%BB%93%E6%9E%9C%E4%BC%98%E5%8C%96/stats)** 安装
+#### 从 **[GreasyFork](https://greasyfork.org/zh-CN/scripts/427841-csdn-cleaner-%E4%B8%8B%E8%BD%BD%E9%A1%B5%E9%9D%A2%E7%A7%BB%E9%99%A4-%E7%99%BE%E5%BA%A6%E6%90%9C%E7%B4%A2csdn%E7%BB%93%E6%9E%9C%E4%BC%98%E5%8C%96)** 安装
 直接通过 GreasyFork 安装: **[点我](https://greasyfork.org/zh-CN/scripts/427841)**  
 
