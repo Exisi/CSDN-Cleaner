@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CSDN-Cleaner|下载页面移除|百度搜索csdn结果优化
 // @namespace    http://tampermonkey.net/
-// @version      2.8
+// @version      2.9
 // @description  1.进入CSDN下载界面自动关闭 2.CSDN博客文章界面下推荐中有关csdn下载的链接清除 3.百度搜索界面清除CSDN下载和聚合内容的搜索结果 4.百度界面搜索结果/相同文章去重 5.对 CSDN 文章原创 / 转载、发布时间突出标识 6.增加界面表格获取按钮，对csdn博客中的表格进行获取重绘，复制格式不混乱 7.防百度预加载干扰
 // @author       Exisi
 // @match        https://download.csdn.net/*
@@ -344,7 +344,8 @@
                                         "<button id='new_tag' " +
                                             "style='background:none;" +
                                                 "color:" + color + ";transform:rotate(45deg);text-align: center;" +
-                                                "display: inline-block;font-size:12px;padding:2px;'>" + type + "" +
+                                                "display: inline-block;font-size:12px;padding:2px;border:none;'>" + 
+                                                type + "" +
                                             "</button>" +
                                         "</div>";
             tag.parent.prepend(new_tag.tag);
