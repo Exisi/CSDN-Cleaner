@@ -9,8 +9,17 @@
 * 百度搜索 清除CSDN下载
 * 百度搜索 搜索结果/相同文章去重
 * 百度搜索 禁止预加载
+## TODO
+- 增加菜单界面，所有功能可选
+
+## 安装
+#### 从 **[GreasyFork](https://greasyfork.org/zh-CN/scripts/427841-csdn-cleaner-%E4%B8%8B%E8%BD%BD%E9%A1%B5%E9%9D%A2%E7%A7%BB%E9%99%A4-%E7%99%BE%E5%BA%A6%E6%90%9C%E7%B4%A2csdn%E7%BB%93%E6%9E%9C%E4%BC%98%E5%8C%96)** 安装
+直接通过 GreasyFork 安装: **[点我](https://greasyfork.org/zh-CN/scripts/427841)**  
 
 ## 更新
+#### V2.8
+1. 修复百度搜索链接中关键词的转义问题
+
 #### V2.7
 1. 启用严格模式
 
@@ -97,8 +106,3 @@
 #### V0.1
 1. 进入CSDN下载界面自动关闭
 2. CSDN文章界面推荐栏的下载链接清除
-
-## 安装
-#### 从 **[GreasyFork](https://greasyfork.org/zh-CN/scripts/427841-csdn-cleaner-%E4%B8%8B%E8%BD%BD%E9%A1%B5%E9%9D%A2%E7%A7%BB%E9%99%A4-%E7%99%BE%E5%BA%A6%E6%90%9C%E7%B4%A2csdn%E7%BB%93%E6%9E%9C%E4%BC%98%E5%8C%96)** 安装
-直接通过 GreasyFork 安装: **[点我](https://greasyfork.org/zh-CN/scripts/427841)**  
-

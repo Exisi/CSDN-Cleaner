@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CSDN-Cleaner|下载页面移除|百度搜索csdn结果优化
 // @namespace    http://tampermonkey.net/
-// @version      2.7
+// @version      2.8
 // @description  1.进入CSDN下载界面自动关闭 2.CSDN博客文章界面下推荐中有关csdn下载的链接清除 3.百度搜索界面清除CSDN下载和聚合内容的搜索结果 4.百度界面搜索结果/相同文章去重 5.对 CSDN 文章原创 / 转载、发布时间突出标识 6.增加界面表格获取按钮，对csdn博客中的表格进行获取重绘，复制格式不混乱 7.防百度预加载干扰
 // @author       Exisi
 // @match        https://download.csdn.net/*
@@ -10,7 +10,6 @@
 // @match        *.blog.csdn.net/article/*
 // @match        *://www.baidu.com/s*
 // @supportURL   https://github.com/Exisi/CSDN-Cleaner/issues/new
-// @downloadURL none
 // ==/UserScript==
 
 (function () {
@@ -145,7 +144,7 @@
     function setSearchKeyword() {
         let keyword = document.getElementById("kw");
         if (keyword != null) {
-            keyword = keyword.value;
+            keyword = encodeURIComponent(keyword.value);
             let prefix = "https://www.baidu.com/s?wd=";
             window.location = prefix + keyword;
         }
